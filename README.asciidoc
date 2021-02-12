@@ -1,0 +1,18 @@
+# k-hop Procedures
+
+For a performance evaluation this project provides implementations to find all paths of length k between two given nodes.
+
+Neo4j target versions: 4.0 .. 4.2
+
+## build & install
+
+[source,shell]
+----
+./gradlew build
+----
+
+Copy `./build/libs/k-hop-paths-khoppaths.jar` to `plugins` folder and restart.
+
+## Usage
+
+See link:src/test/java/org/neo4j/field/KHopProcsTest.java[] for an example.
