@@ -11,12 +11,15 @@ import org.neo4j.internal.helpers.collection.Iterators;
 import java.util.Collections;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 public class KHopProcsTest {
 
     @RegisterExtension
     static Neo4jExtension neo4j = Neo4jExtension.builder()
             .withDisabledServer()
             .withProcedure(KHopProcs.class)
+            .withFunction(KHopProcs.class)
             .withFixture("create (:Person{id:'p1'})-[:WORK_FOR{position:'bigboss'}]->(c:Company{id:'c1'})<-[:INVEST_TO{pct:7.8}]-(:Person{id:'p2'})")
             .build();
 
@@ -31,4 +34,21 @@ public class KHopProcsTest {
         });
 
     }
+
+    @Test
+    void testParallel(GraphDatabaseService db) {
+        /*
+        (a)--(b)--(c)--(f)
+          \       /    /
+           \ -- (d)--(e)
+         */
+
+        db.executeTransactionally("create (a:Node{id:'a'})-[:r]->(b:Node{id:'b'})-[:r]->(c:Node{id:'c'})-[:r]->(f:Node{id:'f'})," +
+                "(a)-[:r]->(d:Node{id:'d'})-[:r]->(c), (d)-[:r]->(e:Node{id:'e'})-[:r]->(f)");
+
+        long count = db.executeTransactionally("match (a:Node{id:'a'}), (f:Node{id:'f'}) return neo4j.khop.parallel(a, f, 3) as count",
+                Collections.emptyMap(), result -> (long)Iterators.single(result).get("count"));
+        assertEquals(count, 3);
+    }
+
 }
